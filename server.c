@@ -7,6 +7,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+const char *ok_response = "HTTP/1.1 200 OK\r\n\r\n";
+const char *not_found_response = "HTTP/1.1 404 Not Found\r\n\r\n";
+
 int main() {
     // Disable output buffering
     setbuf(stdout, NULL);
@@ -50,7 +53,20 @@ int main() {
     int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, &client_addr_len);
     printf("Client connected\n");
 
-    const char *response = "HTTP/1.1 200 OK\r\n\r\n";
+    const char requests[256];
+    recv(client_fd, (void *)requests, 255, 0);
+
+    char *path = strtok(requests, " ");
+    char *req_path = strtok(NULL, " ");
+
+    const char *response;
+
+    if (!strcmp(req_path, "/")) {
+        response = ok_response; 
+    } else {
+        response = not_found_response;
+    }
+
     send(client_fd, response, strlen(response), 0);
 
     close(server_fd);
